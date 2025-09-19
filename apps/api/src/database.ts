@@ -1,53 +1,38 @@
-import DatabaseConstructor, { Database as SqliteDatabase } from 'better-sqlite3';
-import { mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { createClient } from "@libsql/client";
+import { drizzle } from "drizzle-orm/libsql";
+import { desc, sql } from "drizzle-orm";
+import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { mkdirSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-let databaseInstance: SqliteDatabase | null = null;
+const moduleDirectory = dirname(fileURLToPath(import.meta.url));
+const dataDirectory = join(moduleDirectory, "..", "data");
+mkdirSync(dataDirectory, { recursive: true });
 
-const resolveDatabasePath = (): string => {
-  const customPath = process.env.DATABASE_PATH;
-  if (customPath && customPath.trim().length > 0) {
-    return customPath;
-  }
+const defaultDatabaseUrl = `file:${join(dataDirectory, "app.sqlite")}`;
 
-  const moduleDirectory = dirname(fileURLToPath(import.meta.url));
-  const dataDirectory = join(moduleDirectory, '..', 'data');
+const client = createClient({
+  url: process.env.DATABASE_URL ?? defaultDatabaseUrl,
+});
 
-  mkdirSync(dataDirectory, { recursive: true });
+const db = drizzle(client);
 
-  return join(dataDirectory, 'app.sqlite');
-};
+const entries = sqliteTable("entries", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  expression: text("expression").notNull().unique(),
+  meaning: text("meaning").notNull(),
+  examples: text("examples").notNull(),
+  toneTip: text("tone_tip").notNull(),
+  etymology: text("etymology").notNull(),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+});
 
-const initializeSchema = (database: SqliteDatabase): void => {
-  database.exec(`
-    CREATE TABLE IF NOT EXISTS entries (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      expression TEXT NOT NULL UNIQUE,
-      meaning TEXT NOT NULL,
-      examples TEXT NOT NULL,
-      tone_tip TEXT NOT NULL,
-      etymology TEXT NOT NULL,
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
-  `);
+type EntryRow = typeof entries.$inferSelect;
 
-};
-
-const openDatabase = (): SqliteDatabase => {
-  if (databaseInstance) {
-    return databaseInstance;
-  }
-
-  const databasePath = resolveDatabasePath();
-
-  databaseInstance = new DatabaseConstructor(databasePath);
-  databaseInstance.pragma('journal_mode = WAL');
-
-  initializeSchema(databaseInstance);
-
-  return databaseInstance;
-};
+type EntryInsert = typeof entries.$inferInsert;
 
 export type StoredEntry = {
   id: number;
@@ -67,63 +52,66 @@ export type CreateEntryPayload = {
   etymology: string;
 };
 
-const mapEntryRow = (row: {
-  id: number;
-  expression: string;
-  meaning: string;
-  examples: string;
-  tone_tip: string;
-  etymology: string;
-  created_at: string;
-}): StoredEntry => ({
-  id: row.id,
-  expression: row.expression,
-  meaning: row.meaning,
-  examples: JSON.parse(row.examples) as string[],
-  toneTip: row.tone_tip,
-  etymology: row.etymology,
-  createdAt: row.created_at,
+const initializationPromise: Promise<void> = client
+  .execute(
+    `
+    CREATE TABLE IF NOT EXISTS entries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      expression TEXT NOT NULL UNIQUE,
+      meaning TEXT NOT NULL,
+      examples TEXT NOT NULL,
+      tone_tip TEXT NOT NULL,
+      etymology TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `
+  )
+  .then(() => undefined);
+
+const mapEntryRow = (row: EntryRow): StoredEntry => ({
+  id: row.id!,
+  expression: row.expression!,
+  meaning: row.meaning!,
+  examples: JSON.parse(row.examples ?? "[]") as string[],
+  toneTip: row.toneTip!,
+  etymology: row.etymology!,
+  createdAt: row.createdAt!,
 });
 
-export const saveEntry = (payload: CreateEntryPayload): void => {
-  const database = openDatabase();
+export const saveEntry = async (payload: CreateEntryPayload): Promise<void> => {
+  await initializationPromise;
 
-  database.prepare(`
-    INSERT INTO entries (expression, meaning, examples, tone_tip, etymology)
-    VALUES (@expression, @meaning, @examples, @toneTip, @etymology)
-    ON CONFLICT(expression) DO UPDATE SET
-      meaning = excluded.meaning,
-      examples = excluded.examples,
-      tone_tip = excluded.tone_tip,
-      etymology = excluded.etymology
-  `).run({
+  const serializedExamples = JSON.stringify(payload.examples);
+
+  const values: EntryInsert = {
     expression: payload.expression,
     meaning: payload.meaning,
-    examples: JSON.stringify(payload.examples),
+    examples: serializedExamples,
     toneTip: payload.toneTip,
     etymology: payload.etymology,
-  });
+  };
+
+  await db
+    .insert(entries)
+    .values(values)
+    .onConflictDoUpdate({
+      target: entries.expression,
+      set: {
+        meaning: payload.meaning,
+        examples: serializedExamples,
+        toneTip: payload.toneTip,
+        etymology: payload.etymology,
+      },
+    });
 };
 
-export const listEntries = (): StoredEntry[] => {
-  const database = openDatabase();
+export const listEntries = async (): Promise<StoredEntry[]> => {
+  await initializationPromise;
 
-  const rows = database
-    .prepare(`
-      SELECT id, expression, meaning, examples, tone_tip, etymology, created_at
-      FROM entries
-      ORDER BY created_at DESC, id DESC
-    `)
-    .all() as Array<{
-      id: number;
-      expression: string;
-      meaning: string;
-      examples: string;
-      tone_tip: string;
-      etymology: string;
-      created_at: string;
-    }>;
+  const rows = await db
+    .select()
+    .from(entries)
+    .orderBy(desc(entries.createdAt), desc(entries.id));
 
   return rows.map(mapEntryRow);
 };
-

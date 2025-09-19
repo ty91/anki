@@ -38,7 +38,7 @@ app.post('/api/generate', async (context) => {
 
     const response: GenerateResponse = await generateEntry(entry);
 
-    saveEntry({
+    await saveEntry({
       expression: entry,
       meaning: response.meaning,
       examples: response.examples,
