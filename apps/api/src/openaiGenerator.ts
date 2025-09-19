@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { appConfig } from "./config.js";
 
 export type ClassificationResult = {
   isValid: boolean;
@@ -75,7 +76,7 @@ export const classifyEntry = async (
   const client = getClient();
 
   const response = await client.responses.parse({
-    model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
+    model: appConfig.OPENAI_MODEL,
     input: [
       {
         role: "system",
@@ -117,7 +118,7 @@ const getClient = (): OpenAI => {
     return cachedClient;
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = appConfig.OPENAI_API_KEY;
 
   if (!apiKey) {
     throw new Error(
@@ -136,7 +137,7 @@ export const generateEntry = async (
   const client = getClient();
 
   const response = await client.responses.parse({
-    model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
+    model: appConfig.OPENAI_MODEL,
     input: [
       {
         role: "system",
