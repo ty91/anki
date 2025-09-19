@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
-import { saveEntry } from './database.js';
+import { fetchEntryByExpression, saveEntry } from './database.js';
 import { classifyEntry, generateEntry, type ClassificationResult, type GenerateResponse } from './openaiGenerator.js';
 
 type GenerateRequestBody = {
@@ -30,6 +30,12 @@ app.post('/api/generate', async (context) => {
   }
 
   try {
+    const existingEntry = await fetchEntryByExpression(entry);
+
+    if (existingEntry) {
+      return context.json(existingEntry);
+    }
+
     const classification: ClassificationResult = await classifyEntry(entry);
 
     if (!classification.isValid) {
@@ -46,7 +52,13 @@ app.post('/api/generate', async (context) => {
       etymology: response.etymology,
     });
 
-    return context.json(response);
+    const saved = await fetchEntryByExpression(entry);
+
+    if (!saved) {
+      throw new Error('Failed to persist entry.');
+    }
+
+    return context.json(saved);
   } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Failed to generate content from OpenAI.';

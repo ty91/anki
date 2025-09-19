@@ -1,6 +1,6 @@
 import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
-import { desc, sql } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -114,4 +114,20 @@ export const listEntries = async (): Promise<StoredEntry[]> => {
     .orderBy(desc(entries.createdAt), desc(entries.id));
 
   return rows.map(mapEntryRow);
+};
+
+export const fetchEntryByExpression = async (expression: string): Promise<StoredEntry | null> => {
+  await initializationPromise;
+
+  const rows = await db
+    .select()
+    .from(entries)
+    .where(eq(entries.expression, expression))
+    .limit(1);
+
+  if (rows.length === 0) {
+    return null;
+  }
+
+  return mapEntryRow(rows[0]);
 };
