@@ -1,7 +1,10 @@
 import { type FormEvent, useState } from "react";
 import AddEntryModal, { type GenerateResponse } from "./AddEntryModal";
+import LoginView from "./LoginView";
+import { useAuth } from "./hooks/useAuth";
 
 const App = () => {
+  const { status, session, signOut } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [entryText, setEntryText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -9,6 +12,8 @@ const App = () => {
   const [generationResult, setGenerationResult] = useState<GenerateResponse | null>(null);
   const [submittedEntry, setSubmittedEntry] = useState<string | null>(null);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isSignOutLoading, setIsSignOutLoading] = useState(false);
+  const [signOutError, setSignOutError] = useState<string | null>(null);
 
   const openModal = () => {
     setIsModalOpen(true);
@@ -77,9 +82,48 @@ const App = () => {
     setEntryText("");
   };
 
+  const handleSignOut = async () => {
+    setIsSignOutLoading(true);
+    setSignOutError(null);
+    try {
+      await signOut();
+    } catch (error) {
+      setSignOutError(error instanceof Error ? error.message : "Failed to sign out.");
+    } finally {
+      setIsSignOutLoading(false);
+    }
+  };
+
+  if (status === "loading") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-6 text-slate-100">
+        <p className="text-sm text-slate-300">Checking your session...</p>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <LoginView />;
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-slate-950 px-4 py-6 text-slate-100">
       <header className="mx-auto w-full max-w-3xl">
+        <div className="mb-4 flex justify-end">
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="rounded-full border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-medium text-slate-200 shadow-sm shadow-slate-900/40 transition hover:bg-slate-800 disabled:opacity-60"
+            disabled={isSignOutLoading}
+          >
+            Sign out
+          </button>
+        </div>
+        {signOutError ? (
+          <p className="mb-2 text-right text-xs text-rose-400" role="alert">
+            {signOutError}
+          </p>
+        ) : null}
         <button
           type="button"
           className="flex w-full items-center justify-center rounded-2xl border border-dashed border-sky-400 bg-slate-900/50 px-6 py-8 text-5xl font-semibold text-sky-300 shadow-lg shadow-sky-900/30 transition hover:bg-slate-900 hover:text-sky-200"
