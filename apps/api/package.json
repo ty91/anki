@@ -1,0 +1,23 @@
+{
+  "name": "@anki/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.11.1",
+    "better-sqlite3": "^12.2.0",
+    "dotenv": "^17.2.2",
+    "hono": "^4.5.5",
+    "openai": "^5.21.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.1",
+    "typescript": "^5.7.2"
+  }
+}

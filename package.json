@@ -1,0 +1,13 @@
+{
+  "name": "anki",
+  "private": true,
+  "packageManager": "pnpm@10.15.1",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:api": "pnpm --filter @anki/api dev",
+    "dev:web": "pnpm --filter @anki/web dev",
+    "build": "pnpm -r build"
+  }
+}
