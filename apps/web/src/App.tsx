@@ -126,25 +126,33 @@ const App = () => {
     try {
       await trpc.anki.review.mutate({ entryId: currentStudyItem.id, rating });
 
-      const offsets: Record<Rating, number> = {
-        again: 1,
-        hard: 2,
-        good: 3,
-        easy: 5,
-      };
-      const offset = offsets[rating];
       const rest = studyItems.slice(1);
-      if (rest.length > 0) {
-        const insertAt = Math.min(offset - 1, rest.length);
-        const newQueue = [
-          ...rest.slice(0, insertAt),
-          currentStudyItem,
-          ...rest.slice(insertAt),
-        ];
-        setStudyItems(newQueue);
+
+      // Simple session logic:
+      // - again/hard: reinsert soon
+      // - good/easy: remove from session queue
+      if (rating === "again" || rating === "hard") {
+        if (rest.length > 0) {
+          const insertAt = Math.min(rating === "again" ? 0 : 1, rest.length);
+          const newQueue = [
+            ...rest.slice(0, insertAt),
+            currentStudyItem,
+            ...rest.slice(insertAt),
+          ];
+          setStudyItems(newQueue);
+        } else {
+          // No other cards waiting; end session for now
+          setStudyItems([]);
+          setIsStudyActive(false);
+        }
       } else {
-        setStudyItems([]);
-        setIsStudyActive(false);
+        // good/easy: do not reinsert; move on
+        if (rest.length > 0) {
+          setStudyItems(rest);
+        } else {
+          setStudyItems([]);
+          setIsStudyActive(false);
+        }
       }
       setIsCardRevealed(false);
     } catch (error) {
