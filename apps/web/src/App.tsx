@@ -3,6 +3,7 @@ import AddEntryModal, { type GenerateResponse } from "./AddEntryModal";
 import LoginView from "./LoginView";
 import { useAuth } from "./hooks/useAuth";
 import { trpc } from "./trpcClient";
+import StudyCard, { type Rating, type StudyItem } from "./StudyCard";
 
 const App = () => {
   const { status, user, signOut } = useAuth();
@@ -17,6 +18,11 @@ const App = () => {
   const [alreadyExists, setAlreadyExists] = useState(false);
   const [isSignOutLoading, setIsSignOutLoading] = useState(false);
   const [signOutError, setSignOutError] = useState<string | null>(null);
+  const [studyItems, setStudyItems] = useState<StudyItem[]>([]);
+  const [isStudyActive, setIsStudyActive] = useState(false);
+  const [isCardRevealed, setIsCardRevealed] = useState(false);
+  const [isRatingSubmitting, setIsRatingSubmitting] = useState(false);
+  const [studyError, setStudyError] = useState<string | null>(null);
 
   const openModal = () => {
     setIsModalOpen(true);
@@ -96,6 +102,60 @@ const App = () => {
     }
   };
 
+  const startStudy = async () => {
+    setStudyError(null);
+    try {
+      const data = await trpc.anki.start.query();
+      const items = data.items as StudyItem[];
+      setStudyItems(items);
+      setIsStudyActive(true);
+      setIsCardRevealed(false);
+    } catch (error) {
+      setStudyError(
+        error instanceof Error ? error.message : "Failed to start session."
+      );
+    }
+  };
+
+  const currentStudyItem = studyItems.length > 0 ? studyItems[0] : null;
+
+  const handleRate = async (rating: Rating) => {
+    if (!currentStudyItem) return;
+    setIsRatingSubmitting(true);
+    setStudyError(null);
+    try {
+      await trpc.anki.review.mutate({ entryId: currentStudyItem.id, rating });
+
+      const offsets: Record<Rating, number> = {
+        again: 1,
+        hard: 2,
+        good: 3,
+        easy: 5,
+      };
+      const offset = offsets[rating];
+      const rest = studyItems.slice(1);
+      if (rest.length > 0) {
+        const insertAt = Math.min(offset - 1, rest.length);
+        const newQueue = [
+          ...rest.slice(0, insertAt),
+          currentStudyItem,
+          ...rest.slice(insertAt),
+        ];
+        setStudyItems(newQueue);
+      } else {
+        setStudyItems([]);
+        setIsStudyActive(false);
+      }
+      setIsCardRevealed(false);
+    } catch (error) {
+      setStudyError(
+        error instanceof Error ? error.message : "Failed to submit review."
+      );
+    } finally {
+      setIsRatingSubmitting(false);
+    }
+  };
+
   if (status === "loading") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-6 text-slate-100">
@@ -137,12 +197,39 @@ const App = () => {
       </header>
 
       <main className="flex flex-1 items-center justify-center">
-        <button
-          type="button"
-          className="rounded-full bg-sky-500 px-12 py-6 text-2xl font-semibold text-slate-900 shadow-xl shadow-sky-900/40 transition hover:bg-sky-400"
-        >
-          Start
-        </button>
+        {!isStudyActive ? (
+          <div className="flex flex-col items-center gap-3">
+            <button
+              type="button"
+              onClick={startStudy}
+              className="rounded-full bg-sky-500 px-12 py-6 text-2xl font-semibold text-slate-900 shadow-xl shadow-sky-900/40 transition hover:bg-sky-400"
+            >
+              Start
+            </button>
+            {studyError ? (
+              <p className="text-sm text-rose-400" role="alert">
+                {studyError}
+              </p>
+            ) : null}
+          </div>
+        ) : currentStudyItem ? (
+          <div className="w-full flex flex-col items-center gap-4">
+            <StudyCard
+              item={currentStudyItem}
+              isRevealed={isCardRevealed}
+              isSubmitting={isRatingSubmitting}
+              onReveal={() => setIsCardRevealed(true)}
+              onRate={handleRate}
+            />
+            {studyError ? (
+              <p className="text-sm text-rose-400" role="alert">
+                {studyError}
+              </p>
+            ) : null}
+          </div>
+        ) : (
+          <div className="text-slate-300">No more due cards right now.</div>
+        )}
       </main>
 
       <AddEntryModal
@@ -156,8 +243,8 @@ const App = () => {
         onClose={closeModal}
         onEntryChange={setEntryText}
         onSubmit={handleSubmit}
-      onAddAnother={prepareAnotherEntry}
-      alreadyExists={alreadyExists}
+        onAddAnother={prepareAnotherEntry}
+        alreadyExists={alreadyExists}
       />
     </div>
   );
