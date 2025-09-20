@@ -1,15 +1,5 @@
 import { useMemo } from "react";
-
-export type Rating = "again" | "hard" | "good" | "easy";
-
-export type StudyItem = {
-  id: number;
-  expression: string;
-  meaning: string;
-  examples: string[];
-  toneTip: string;
-  etymology: string;
-};
+import type { Rating, StudyItem } from "@/features/study/types";
 
 type StudyCardProps = {
   item: StudyItem;

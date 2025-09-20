@@ -1,11 +1,5 @@
 import { type FormEvent } from "react";
-
-export type GenerateResponse = {
-  meaning: string;
-  examples: string[];
-  toneTip: string;
-  etymology: string;
-};
+import type { GenerateResponse } from "@/features/entries/types";
 
 type AddEntryModalProps = {
   isOpen: boolean;
