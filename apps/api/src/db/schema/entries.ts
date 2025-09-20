@@ -1,16 +1,12 @@
-import {
-  jsonb,
-  pgTable,
-  serial,
-  text,
-  timestamp,
-  uniqueIndex,
-} from "drizzle-orm/pg-core";
+import { jsonb, pgTable, serial, text, timestamp, uniqueIndex, integer } from "drizzle-orm/pg-core";
+import { users } from "./users.js";
 
 export const entries = pgTable(
   "entries",
   {
     id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .references(() => users.id, { onDelete: "cascade" }),
     expression: text("expression").notNull(),
     meaning: text("meaning").notNull(),
     examples: jsonb("examples").$type<string[]>().notNull(),
@@ -20,7 +16,9 @@ export const entries = pgTable(
       .defaultNow()
       .notNull(),
   },
-  (table) => [uniqueIndex("entries_expression_key").on(table.expression)]
+  (table) => [
+    uniqueIndex("entries_user_expression_key").on(table.userId, table.expression),
+  ]
 );
 
 export type Entry = typeof entries.$inferSelect;

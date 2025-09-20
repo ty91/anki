@@ -15,6 +15,7 @@ type AddEntryModalProps = {
   generationResult: GenerateResponse | null;
   submittedEntry: string | null;
   isFlipped: boolean;
+  alreadyExists?: boolean;
   onClose: () => void;
   onEntryChange: (value: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -29,6 +30,7 @@ const AddEntryModal = ({
   generationResult,
   submittedEntry,
   isFlipped,
+  alreadyExists,
   onClose,
   onEntryChange,
   onSubmit,
@@ -107,6 +109,10 @@ const AddEntryModal = ({
 
             <div className="absolute inset-0 flex flex-col rounded-2xl border border-slate-700 bg-slate-900 p-6 text-slate-100 shadow-2xl [backface-visibility:hidden] [transform:rotateY(180deg)]">
               <h2 className="text-2xl font-semibold text-sky-200">Generated entry</h2>
+
+              {alreadyExists ? (
+                <p className="mt-1 text-xs text-amber-300">This entry is already in your list. Showing saved content.</p>
+              ) : null}
 
               {submittedEntry ? (
                 <p className="mt-2 text-sm text-slate-400">Result for “{submittedEntry}”.</p>

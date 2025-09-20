@@ -13,6 +13,7 @@ const App = () => {
     useState<GenerateResponse | null>(null);
   const [submittedEntry, setSubmittedEntry] = useState<string | null>(null);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [alreadyExists, setAlreadyExists] = useState(false);
   const [isSignOutLoading, setIsSignOutLoading] = useState(false);
   const [signOutError, setSignOutError] = useState<string | null>(null);
 
@@ -23,6 +24,7 @@ const App = () => {
     setGenerationResult(null);
     setSubmittedEntry(null);
     setIsFlipped(false);
+    setAlreadyExists(false);
   };
 
   const closeModal = () => {
@@ -33,6 +35,7 @@ const App = () => {
     setSubmittedEntry(null);
     setIsFlipped(false);
     setEntryText("");
+    setAlreadyExists(false);
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -63,9 +66,13 @@ const App = () => {
         throw new Error(errorData.error ?? "Unexpected server error.");
       }
 
-      const data = (await response.json()) as GenerateResponse;
+      const data = (await response.json()) as {
+        existed: boolean;
+        entry: GenerateResponse;
+      };
 
-      setGenerationResult(data);
+      setGenerationResult(data.entry);
+      setAlreadyExists(Boolean(data.existed));
       setSubmittedEntry(trimmedEntry);
       setEntryText("");
       setIsFlipped(true);
@@ -160,7 +167,8 @@ const App = () => {
         onClose={closeModal}
         onEntryChange={setEntryText}
         onSubmit={handleSubmit}
-        onAddAnother={prepareAnotherEntry}
+      onAddAnother={prepareAnotherEntry}
+      alreadyExists={alreadyExists}
       />
     </div>
   );
