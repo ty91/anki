@@ -1,9 +1,9 @@
 import { type FormEvent, useState } from "react";
-import AddEntryModal, { type GenerateResponse } from "./AddEntryModal";
-import LoginView from "./LoginView";
-import { useAuth } from "./hooks/useAuth";
-import { trpc } from "./trpcClient";
-import StudyCard, { type Rating, type StudyItem } from "./StudyCard";
+import AddEntryModal, { type GenerateResponse } from "@/features/entries/components/AddEntryModal";
+import LoginView from "@/features/auth/components/LoginView";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
+import StudyCard, { type Rating, type StudyItem } from "@/features/study/components/StudyCard";
 
 const App = () => {
   const { status, user, signOut } = useAuth();

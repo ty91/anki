@@ -115,4 +115,3 @@ export default function StudyCard({ item, isRevealed, isSubmitting, onReveal, on
     </div>
   );
 }
-

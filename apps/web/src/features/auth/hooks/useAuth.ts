@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { trpc } from "../trpcClient";
+import { trpc } from "@/lib/trpc";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 
