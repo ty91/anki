@@ -4,7 +4,7 @@ import LoginView from "./LoginView";
 import { useAuth } from "./hooks/useAuth";
 
 const App = () => {
-  const { status, session, signOut } = useAuth();
+  const { status, user, signOut } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [entryText, setEntryText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -102,7 +102,7 @@ const App = () => {
     );
   }
 
-  if (!session) {
+  if (!user) {
     return <LoginView />;
   }
 

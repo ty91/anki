@@ -11,6 +11,7 @@ import { db } from "./db/client.js";
 import { entries, type Entry } from "./db/schema/entries.js";
 import { eq } from "drizzle-orm";
 import { authRoutes } from "./routes/auth.route.js";
+import { requireAuth } from "./middleware/requireAuth.js";
 
 type GenerateRequestBody = {
   entry: string;
@@ -24,7 +25,7 @@ app.get("/", (context) => {
 
 app.route("/api/auth", authRoutes);
 
-app.post("/api/generate", async (context) => {
+app.post("/api/generate", requireAuth, async (context) => {
   let payload: GenerateRequestBody;
 
   try {

@@ -1,37 +1,33 @@
 import { useSyncExternalStore } from "react";
-import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "../supabaseClient";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 
+export type AuthUser = {
+  id: number;
+  userId: string;
+};
+
 type AuthSnapshot = {
   status: AuthStatus;
-  session: Session | null;
-  user: User | null;
-  accessToken: string | null;
+  user: AuthUser | null;
 };
 
 let snapshot: AuthSnapshot = {
   status: "loading",
-  session: null,
   user: null,
-  accessToken: null,
 };
 
 const listeners = new Set<() => void>();
-let unsubscribeAuth: (() => void) | null = null;
 let initialized = false;
 
 function emit() {
   for (const listener of listeners) listener();
 }
 
-function setFromSession(session: Session | null) {
+function setFromUser(user: AuthUser | null) {
   snapshot = {
-    status: session ? "authenticated" : "unauthenticated",
-    session,
-    user: session?.user ?? null,
-    accessToken: session?.access_token ?? null,
+    status: user ? "authenticated" : "unauthenticated",
+    user,
   };
   emit();
 }
@@ -39,20 +35,18 @@ function setFromSession(session: Session | null) {
 async function ensureInitialized() {
   if (initialized) return;
   initialized = true;
-
-  const { data, error } = await supabase.auth.getSession();
-  if (error) {
-    setFromSession(null);
-  } else {
-    setFromSession(data.session);
+  try {
+    const response = await fetch("/api/auth/session", {
+      method: "GET",
+      credentials: "include",
+      headers: { "Accept": "application/json" },
+    });
+    if (!response.ok) throw new Error("Failed to fetch session");
+    const data = (await response.json()) as { user: AuthUser | null };
+    setFromUser(data.user);
+  } catch {
+    setFromUser(null);
   }
-
-  const { data: sub } = supabase.auth.onAuthStateChange(
-    (_event, newSession) => {
-      setFromSession(newSession);
-    }
-  );
-  unsubscribeAuth = () => sub.subscription?.unsubscribe();
 }
 
 function subscribe(listener: () => void) {
@@ -60,16 +54,9 @@ function subscribe(listener: () => void) {
   void ensureInitialized();
   return () => {
     listeners.delete(listener);
-    if (listeners.size === 0 && unsubscribeAuth) {
-      unsubscribeAuth();
-      unsubscribeAuth = null;
+    if (listeners.size === 0) {
       initialized = false;
-      snapshot = {
-        status: "loading",
-        session: null,
-        user: null,
-        accessToken: null,
-      };
+      snapshot = { status: "loading", user: null };
     }
   };
 }
@@ -79,40 +66,89 @@ function getSnapshot(): AuthSnapshot {
 }
 
 function getServerSnapshot(): AuthSnapshot {
-  return { status: "loading", session: null, user: null, accessToken: null };
+  return { status: "loading", user: null };
 }
 
 export type UseAuthResult = {
   status: AuthStatus;
-  session: Session | null;
-  user: User | null;
-  accessToken: string | null;
-  signInWithGoogle: () => Promise<void>;
+  user: AuthUser | null;
+  signIn: (payload: { userId: string; password: string }) => Promise<void>;
+  signUp: (payload: {
+    userId: string;
+    password: string;
+    email?: string;
+  }) => Promise<void>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
 };
 
-async function signInWithGoogle(): Promise<void> {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: window.location.origin },
+async function signIn(payload: { userId: string; password: string }) {
+  const response = await fetch(`/api/auth/login`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userid: payload.userId, password: payload.password }),
   });
-  if (error) throw new Error(error.message);
+  if (!response.ok) {
+    const err = (await response.json().catch(() => ({}))) as { error?: string };
+    throw new Error(err.error ?? "Failed to sign in.");
+  }
+  await refresh();
 }
 
-async function signOut(): Promise<void> {
-  const { error } = await supabase.auth.signOut();
-  if (error) throw new Error(error.message);
+async function signUp(payload: {
+  userId: string;
+  password: string;
+  email?: string;
+}) {
+  const response = await fetch(`/api/auth/sign-up`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      userid: payload.userId,
+      password: payload.password,
+      email: payload.email,
+    }),
+  });
+  if (!response.ok) {
+    const err = (await response.json().catch(() => ({}))) as { error?: string };
+    throw new Error(err.error ?? "Failed to sign up.");
+  }
+  await refresh();
 }
 
-async function refresh(): Promise<void> {
-  const { data, error } = await supabase.auth.getSession();
-  if (error) throw new Error(error.message);
-  setFromSession(data.session);
+async function signOut() {
+  const response = await fetch(`/api/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    const err = (await response.json().catch(() => ({}))) as { error?: string };
+    throw new Error(err.error ?? "Failed to sign out.");
+  }
+  setFromUser(null);
+}
+
+async function refresh() {
+  try {
+    const response = await fetch("/api/auth/session", {
+      method: "GET",
+      credentials: "include",
+      headers: { "Accept": "application/json" },
+    });
+    if (!response.ok) throw new Error("Failed to fetch session");
+    const data = (await response.json()) as { user: AuthUser | null };
+    setFromUser(data.user);
+  } catch (error) {
+    setFromUser(null);
+    if (error instanceof Error) throw error;
+    throw new Error("Failed to refresh session");
+  }
 }
 
 export function useAuth(): UseAuthResult {
-  const { status, session, user, accessToken } = useSyncExternalStore(
+  const { status, user } = useSyncExternalStore(
     subscribe,
     getSnapshot,
     getServerSnapshot
@@ -120,10 +156,9 @@ export function useAuth(): UseAuthResult {
 
   return {
     status,
-    session,
     user,
-    accessToken,
-    signInWithGoogle,
+    signIn,
+    signUp,
     signOut,
     refresh,
   };

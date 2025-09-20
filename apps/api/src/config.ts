@@ -18,9 +18,6 @@ const envSchema = z.object({
   OPENAI_MODEL: z.string().min(1).default("gpt-4o-mini"),
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
   DATABASE_SSL_MODE: z.enum(["require", "disable"]).default("require"),
-  SUPABASE_JWT_SECRET: z.string().min(1),
-  SUPABASE_URL: z.string().min(1),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   SESSION_COOKIE_NAME: z.string().default("session"),
   SESSION_TTL_DAYS: z
     .coerce
