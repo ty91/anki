@@ -2,6 +2,7 @@ import { type FormEvent, useState } from "react";
 import AddEntryModal, { type GenerateResponse } from "./AddEntryModal";
 import LoginView from "./LoginView";
 import { useAuth } from "./hooks/useAuth";
+import { trpc } from "./trpcClient";
 
 const App = () => {
   const { status, user, signOut } = useAuth();
@@ -52,26 +53,14 @@ const App = () => {
     setSubmissionError(null);
 
     try {
-      const response = await fetch("/api/entries", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ entry: trimmedEntry }),
+      const data = await trpc.entries.add.mutate({ entry: trimmedEntry });
+
+      setGenerationResult({
+        meaning: data.entry.meaning,
+        examples: data.entry.examples,
+        toneTip: data.entry.toneTip,
+        etymology: data.entry.etymology,
       });
-
-      if (!response.ok) {
-        const errorData = (await response.json()) as { error?: string };
-        throw new Error(errorData.error ?? "Unexpected server error.");
-      }
-
-      const data = (await response.json()) as {
-        existed: boolean;
-        entry: GenerateResponse;
-      };
-
-      setGenerationResult(data.entry);
       setAlreadyExists(Boolean(data.existed));
       setSubmittedEntry(trimmedEntry);
       setEntryText("");

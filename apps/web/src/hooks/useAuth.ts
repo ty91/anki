@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { trpc } from "../trpcClient";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 
@@ -36,13 +37,7 @@ async function ensureInitialized() {
   if (initialized) return;
   initialized = true;
   try {
-    const response = await fetch("/api/auth/session", {
-      method: "GET",
-      credentials: "include",
-      headers: { "Accept": "application/json" },
-    });
-    if (!response.ok) throw new Error("Failed to fetch session");
-    const data = (await response.json()) as { user: AuthUser | null };
+    const data = await trpc.auth.session.query();
     setFromUser(data.user);
   } catch {
     setFromUser(null);
@@ -83,16 +78,7 @@ export type UseAuthResult = {
 };
 
 async function signIn(payload: { userId: string; password: string }) {
-  const response = await fetch(`/api/auth/login`, {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userid: payload.userId, password: payload.password }),
-  });
-  if (!response.ok) {
-    const err = (await response.json().catch(() => ({}))) as { error?: string };
-    throw new Error(err.error ?? "Failed to sign in.");
-  }
+  await trpc.auth.login.mutate({ userid: payload.userId, password: payload.password });
   await refresh();
 }
 
@@ -101,44 +87,22 @@ async function signUp(payload: {
   password: string;
   email?: string;
 }) {
-  const response = await fetch(`/api/auth/sign-up`, {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      userid: payload.userId,
-      password: payload.password,
-      email: payload.email,
-    }),
+  await trpc.auth["sign-up"].mutate({
+    userid: payload.userId,
+    password: payload.password,
+    email: payload.email,
   });
-  if (!response.ok) {
-    const err = (await response.json().catch(() => ({}))) as { error?: string };
-    throw new Error(err.error ?? "Failed to sign up.");
-  }
   await refresh();
 }
 
 async function signOut() {
-  const response = await fetch(`/api/auth/logout`, {
-    method: "POST",
-    credentials: "include",
-  });
-  if (!response.ok) {
-    const err = (await response.json().catch(() => ({}))) as { error?: string };
-    throw new Error(err.error ?? "Failed to sign out.");
-  }
+  await trpc.auth.logout.mutate();
   setFromUser(null);
 }
 
 async function refresh() {
   try {
-    const response = await fetch("/api/auth/session", {
-      method: "GET",
-      credentials: "include",
-      headers: { "Accept": "application/json" },
-    });
-    if (!response.ok) throw new Error("Failed to fetch session");
-    const data = (await response.json()) as { user: AuthUser | null };
+    const data = await trpc.auth.session.query();
     setFromUser(data.user);
   } catch (error) {
     setFromUser(null);
