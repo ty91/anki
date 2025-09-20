@@ -8,6 +8,13 @@
       "when": 1758286542242,
       "tag": "0000_sticky_bug",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1758345151228,
+      "tag": "0001_thin_lorna_dane",
+      "breakpoints": true
     }
   ]
 }

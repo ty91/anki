@@ -10,6 +10,7 @@ import { appConfig } from "./config.js";
 import { db } from "./db/client.js";
 import { entries, type Entry } from "./db/schema/entries.js";
 import { eq } from "drizzle-orm";
+import { authRoutes } from "./routes/auth.route.js";
 
 type GenerateRequestBody = {
   entry: string;
@@ -20,6 +21,8 @@ const app = new Hono();
 app.get("/", (context) => {
   return context.json({ status: "ok" });
 });
+
+app.route("/api/auth", authRoutes);
 
 app.post("/api/generate", async (context) => {
   let payload: GenerateRequestBody;

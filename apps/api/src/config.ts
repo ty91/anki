@@ -21,6 +21,14 @@ const envSchema = z.object({
   SUPABASE_JWT_SECRET: z.string().min(1),
   SUPABASE_URL: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+  SESSION_COOKIE_NAME: z.string().default("session"),
+  SESSION_TTL_DAYS: z
+    .coerce
+    .number()
+    .int()
+    .min(1)
+    .max(365)
+    .default(7),
 });
 
 const parseResult = envSchema.safeParse(process.env);
