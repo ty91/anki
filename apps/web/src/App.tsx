@@ -9,7 +9,8 @@ const App = () => {
   const [entryText, setEntryText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
-  const [generationResult, setGenerationResult] = useState<GenerateResponse | null>(null);
+  const [generationResult, setGenerationResult] =
+    useState<GenerateResponse | null>(null);
   const [submittedEntry, setSubmittedEntry] = useState<string | null>(null);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isSignOutLoading, setIsSignOutLoading] = useState(false);
@@ -48,11 +49,12 @@ const App = () => {
     setSubmissionError(null);
 
     try {
-      const response = await fetch("/api/generate", {
+      const response = await fetch("/api/entries", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({ entry: trimmedEntry }),
       });
 
@@ -68,7 +70,9 @@ const App = () => {
       setEntryText("");
       setIsFlipped(true);
     } catch (error) {
-      setSubmissionError(error instanceof Error ? error.message : "Failed to generate entry.");
+      setSubmissionError(
+        error instanceof Error ? error.message : "Failed to generate entry."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -88,7 +92,9 @@ const App = () => {
     try {
       await signOut();
     } catch (error) {
-      setSignOutError(error instanceof Error ? error.message : "Failed to sign out.");
+      setSignOutError(
+        error instanceof Error ? error.message : "Failed to sign out."
+      );
     } finally {
       setIsSignOutLoading(false);
     }
