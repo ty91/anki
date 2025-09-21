@@ -88,7 +88,7 @@ const AddEntryModal = ({
                   </p>
                 ) : null}
 
-                <div className="mt-auto flex justify-end gap-3 pt-6">
+                <div className="flex justify-end gap-3 pt-6">
                   <Button
                     type="button"
                     variant="surface"

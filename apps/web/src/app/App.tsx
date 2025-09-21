@@ -1,5 +1,6 @@
 import { useState } from "react";
 import AddEntryModal from "@/features/entries/components/AddEntryModal";
+import ExpressionsPanel from "@/features/entries/components/ExpressionsPanel";
 import LoginView from "@/features/auth/components/LoginView";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import StudyCard from "@/features/study/components/StudyCard";
@@ -12,6 +13,7 @@ const App = () => {
   const { status, user, signOut } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const entry = useEntryCreation();
+  const [showExpressions, setShowExpressions] = useState(false);
   const [isSignOutLoading, setIsSignOutLoading] = useState(false);
   const [signOutError, setSignOutError] = useState<string | null>(null);
   const {
@@ -76,7 +78,9 @@ const App = () => {
       <Header />
 
       <main className="flex flex-1 items-center justify-center">
-        {!isStudyActive ? (
+        {!isStudyActive && showExpressions ? (
+          <ExpressionsPanel onClose={() => setShowExpressions(false)} />
+        ) : !isStudyActive ? (
           <div className="flex flex-col items-center gap-3 w-full px-4">
             <Button
               aria-label="Add"
@@ -98,6 +102,7 @@ const App = () => {
             <Button
               variant="surface"
               size="lg"
+              onClick={() => setShowExpressions(true)}
               className="w-64 max-w-[80vw] text-base"
             >
               Expressions
