@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { and, eq, lte, or, isNull } from "drizzle-orm";
+import { and, eq, lte, or, isNull, asc, sql } from "drizzle-orm";
 import { router, authedProcedure } from "../trpc.js";
 import { db } from "../../db/client.js";
 import { entries } from "../../db/schema/entries.js";
@@ -34,6 +34,13 @@ export const ankiRouter = router({
           eq(entries.userId, ctx.user!.id),
           or(isNull(userEntrySrs.dueAt), lte(userEntrySrs.dueAt, nowIso))
         )
+      )
+      .orderBy(
+        // Null dueAt (new items) first, then the earliest due items
+        sql`CASE WHEN ${userEntrySrs.dueAt} IS NULL THEN 0 ELSE 1 END`,
+        asc(userEntrySrs.dueAt),
+        asc(entries.createdAt),
+        asc(entries.id)
       )
       .limit(30);
 
@@ -109,8 +116,18 @@ export const ankiRouter = router({
           break;
       }
 
+      // Clamp EF to a reasonable upper bound to avoid runaway intervals
+      ef = Math.min(3.0, Math.max(1.3, ef));
+
       const now = new Date();
-      const due = new Date(now.getTime() + intervalDays * 24 * 60 * 60 * 1000);
+      const dayMs = 24 * 60 * 60 * 1000;
+      let due = new Date(now.getTime() + intervalDays * dayMs);
+      // Add a small short-term delay so "again" or "hard" items don't reappear immediately
+      if (input.rating === "again") {
+        due = new Date(due.getTime() + 5 * 60 * 1000); // +5 minutes
+      } else if (input.rating === "hard") {
+        due = new Date(due.getTime() + 10 * 60 * 1000); // +10 minutes
+      }
 
       if (srsRows.length === 0) {
         await db.insert(userEntrySrs).values({

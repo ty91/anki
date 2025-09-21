@@ -7,17 +7,20 @@ export function computeNextQueue(
   rating: Rating
 ): StudyItem[] {
   if (rating === "again" || rating === "hard") {
-    if (rest.length > 0) {
-      const insertAt = Math.min(rating === "again" ? 0 : 1, rest.length);
-      return [
-        ...rest.slice(0, insertAt),
-        current,
-        ...rest.slice(insertAt),
-      ];
+    // Space the card out instead of showing immediately again.
+    // Use a small offset; cap within bounds of the remaining queue.
+    const offset = rating === "again" ? 2 : 4;
+    if (rest.length === 0) {
+      // If no other items remain, keep it for another round.
+      return [current];
     }
-    return [];
+    const insertAt = Math.min(offset, rest.length);
+    return [
+      ...rest.slice(0, insertAt),
+      current,
+      ...rest.slice(insertAt),
+    ];
   }
   // good/easy: move on without reinserting current
-  return rest.length > 0 ? rest : [];
+  return rest;
 }
-
