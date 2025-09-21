@@ -28,7 +28,11 @@ export function useEntryCreation() {
     event.preventDefault();
     const trimmedEntry = entryText.trim();
     if (!trimmedEntry) {
-      setSubmissionError("Entry cannot be empty.");
+      setSubmissionError("Expression cannot be empty.");
+      return;
+    }
+    if (trimmedEntry.length > 100) {
+      setSubmissionError("Expression must be at most 100 characters.");
       return;
     }
     setIsSubmitting(true);
@@ -76,4 +80,3 @@ export function useEntryCreation() {
     reset,
   } as const;
 }
-

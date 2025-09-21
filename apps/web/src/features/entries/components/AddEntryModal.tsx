@@ -60,7 +60,7 @@ const AddEntryModal = ({
                 id="entry-modal-title"
                 className="text-2xl font-bold text-[var(--primary)] font-ui"
               >
-                Add a new entry
+                Add a new expression
               </h2>
 
               <p className="mt-2 text-sm opacity-80">
@@ -69,17 +69,21 @@ const AddEntryModal = ({
 
               <form className="mt-6 flex flex-1 flex-col" onSubmit={onSubmit}>
                 <label className="block text-sm font-medium opacity-90 font-ui">
-                  Entry
+                  Expression
                   <input
                     type="text"
                     value={entryText}
                     onChange={(event) => onEntryChange(event.target.value)}
                     placeholder="e.g. break the ice"
                     className="mt-2 w-full pixel-border pixel-surface pixel-focus px-4 py-3 text-base text-[var(--text)] font-card placeholder:opacity-60 rounded-none"
+                    maxLength={100}
                     autoFocus
                     required
                     disabled={isSubmitting}
                   />
+                  <div className="mt-1 text-right text-xs opacity-70 font-ui">
+                    {entryText.length}/100
+                  </div>
                 </label>
 
                 {submissionError ? (

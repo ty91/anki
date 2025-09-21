@@ -8,16 +8,24 @@ import {
   type ClassificationResult,
   type GenerateResponse,
 } from "../../openaiGenerator.js";
+import { enforceLlmRateLimit } from "../../utils/rateLimiter.js";
 import { authedProcedure, router } from "../trpc.js";
 
 type EntryResponse = { existed: boolean; entry: Entry };
 
 export const entriesRouter = router({
   add: authedProcedure
-    .input(z.object({ entry: z.string().min(1) }))
+    .input(
+      z.object({
+        entry: z.string().trim().min(1, "Entry is required").max(100, "Entry must be at most 100 characters"),
+      })
+    )
     .mutation(async ({ input, ctx }) => {
       const authUser = ctx.user!;
       const entry = input.entry.trim();
+
+      // Rate limit LLM-backed generation per user
+      enforceLlmRateLimit(ctx);
 
       const existingRows = await db
         .select()
@@ -107,4 +115,3 @@ export const entriesRouter = router({
       return { ok: true } as const;
     }),
 });
-
