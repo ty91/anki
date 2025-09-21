@@ -1,13 +1,35 @@
 import { config as loadEnv } from "dotenv";
 import { z } from "zod";
 
-const dotenvResult = loadEnv();
+(() => {
+  const mode = process.env.NODE_ENV ?? "development";
+  const candidates = [
+    ".env",
+    `.env.${mode}`,
+    ".env.local",
+    `.env.${mode}.local`,
+  ];
 
-if (dotenvResult.error) {
-  throw new Error(
-    `Failed to load environment variables: ${dotenvResult.error.message}`
-  );
-}
+  const loaded: Record<string, string> = {};
+  for (const path of candidates) {
+    const temp: Record<string, string> = {};
+    const res = loadEnv({ path, processEnv: temp, override: true });
+    const code = (res.error as NodeJS.ErrnoException | undefined)?.code;
+    if (res.error && code !== "ENOENT") {
+      throw new Error(
+        `Failed to load environment variables from ${path}: ${res.error.message}`
+      );
+    }
+    Object.assign(loaded, temp);
+  }
+
+  // Apply to process.env without overriding existing variables
+  for (const [key, value] of Object.entries(loaded)) {
+    if (process.env[key] === undefined) {
+      process.env[key] = value;
+    }
+  }
+})();
 
 const envSchema = z.object({
   NODE_ENV: z
@@ -19,13 +41,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
   DATABASE_SSL_MODE: z.enum(["require", "disable"]).default("require"),
   SESSION_COOKIE_NAME: z.string().default("session"),
-  SESSION_TTL_DAYS: z
-    .coerce
-    .number()
-    .int()
-    .min(1)
-    .max(365)
-    .default(7),
+  SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(365).default(7),
 });
 
 const parseResult = envSchema.safeParse(process.env);

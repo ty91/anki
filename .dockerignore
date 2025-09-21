@@ -1,0 +1,20 @@
+# Reduce build context and avoid leaking secrets
+.git
+.gitignore
+.env
+*.log
+.DS_Store
+
+# Local installs and builds
+node_modules
+apps/*/node_modules
+apps/*/dist
+
+# pnpm store/debug
+.pnpm-store
+.pnpm-debug.log
+
+# Misc
+dist
+coverage
+tmp
