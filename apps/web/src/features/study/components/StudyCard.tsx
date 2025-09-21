@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { Rating, StudyItem } from "@/features/study/types";
+import Button from "@/app/components/Button";
 
 type StudyCardProps = {
   item: StudyItem;
@@ -9,95 +10,122 @@ type StudyCardProps = {
   onRate: (rating: Rating) => void;
 };
 
-export default function StudyCard({ item, isRevealed, isSubmitting, onReveal, onRate }: StudyCardProps) {
+export default function StudyCard({
+  item,
+  isRevealed,
+  isSubmitting,
+  onReveal,
+  onRate,
+}: StudyCardProps) {
   const hasExamples = useMemo(() => item.examples?.length > 0, [item.examples]);
 
   return (
-    <div className="w-full max-w-3xl">
-      <div className="[perspective:1600px]">
+    <div className="w-full h-full max-w-3xl">
+      <div className="[perspective:1100px]">
         <div
-          className={`relative min-h-[22rem] w-full transition-transform duration-500 [transform-style:preserve-3d] ${
+          className={`relative min-h-[80dvh] w-full transition-transform duration-300 ease-linear [transform-style:preserve-3d] ${
             isRevealed ? "[transform:rotateY(180deg)]" : ""
           }`}
         >
           {/* Front */}
-          <div className="absolute inset-0 flex flex-col rounded-2xl border border-slate-700 bg-slate-900 p-8 text-slate-100 shadow-2xl [backface-visibility:hidden]">
-            <h2 className="text-4xl font-bold text-sky-200 text-center break-words">
+          <div className="absolute inset-0 flex flex-col pixel-border pixel-study-surface pixel-shadow p-8 text-[var(--text)] rounded-none [backface-visibility:hidden] font-card">
+            <h2 className="text-4xl font-bold text-center break-words">
               {item.expression}
             </h2>
             <div className="mt-auto flex justify-center">
-              <button
+              <Button
                 type="button"
-                className="rounded-full bg-sky-500 px-6 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-sky-900/30 transition hover:bg-sky-400"
+                variant="primary"
+                size="sm"
                 onClick={onReveal}
                 disabled={isSubmitting}
+                className="font-ui"
               >
                 Reveal
-              </button>
+              </Button>
             </div>
           </div>
 
           {/* Back */}
-          <div className="absolute inset-0 flex flex-col rounded-2xl border border-slate-700 bg-slate-900 p-6 text-slate-100 shadow-2xl [backface-visibility:hidden] [transform:rotateY(180deg)]">
-            <h3 className="text-base font-semibold text-slate-200">Meaning</h3>
-            <p className="mt-2 text-slate-300">{item.meaning}</p>
+          <div className="absolute inset-0 flex flex-col pixel-border pixel-study-surface pixel-shadow p-6 text-[var(--text)] rounded-none [backface-visibility:hidden] [transform:rotateY(180deg)] font-card">
+            <div className="flex-1 overflow-y-auto pr-1 space-y-4 text-sm">
+              <section>
+                <h3 className="text-base font-semibold font-ui">Meaning</h3>
+                <p className="mt-2 break-words">{item.meaning}</p>
+              </section>
 
-            {hasExamples ? (
-              <div className="mt-4">
-                <h3 className="text-base font-semibold text-slate-200">Examples</h3>
-                <ul className="mt-2 space-y-2 text-slate-300">
-                  {item.examples.map((ex, i) => (
-                    <li key={i} className="rounded-lg border border-slate-800 bg-slate-900/80 px-3 py-2">
-                      {ex}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
+              {hasExamples ? (
+                <section>
+                  <h3 className="text-base font-semibold font-ui">Examples</h3>
+                  <ul className="mt-2 space-y-2">
+                    {item.examples.map((ex, i) => (
+                      <li
+                        key={i}
+                        className="pixel-border px-3 py-2 rounded-none break-words"
+                        style={{
+                          background:
+                            "color-mix(in oklch, var(--study-surface), black 6%)",
+                        }}
+                      >
+                        {ex}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
 
-            <div className="mt-4">
-              <h3 className="text-base font-semibold text-slate-200">Tone tip</h3>
-              <p className="mt-2 text-slate-300">{item.toneTip}</p>
+              <section>
+                <h3 className="text-base font-semibold font-ui">Tone tip</h3>
+                <p className="mt-2 break-words">{item.toneTip}</p>
+              </section>
+
+              <section>
+                <h3 className="text-base font-semibold font-ui">Etymology</h3>
+                <p className="mt-2 break-words">{item.etymology}</p>
+              </section>
             </div>
 
-            <div className="mt-4">
-              <h3 className="text-base font-semibold text-slate-200">Etymology</h3>
-              <p className="mt-2 text-slate-300">{item.etymology}</p>
-            </div>
-
-            <div className="mt-auto grid grid-cols-4 gap-2 pt-6">
-              <button
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-6">
+              <Button
                 type="button"
-                className="rounded-full border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-200 shadow-sm shadow-slate-900/40 transition hover:bg-slate-800 disabled:opacity-60"
+                variant="surface"
+                size="sm"
                 onClick={() => onRate("again")}
                 disabled={isSubmitting}
+                className="font-ui w-full"
               >
                 Again
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                className="rounded-full border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-200 shadow-sm shadow-slate-900/40 transition hover:bg-slate-800 disabled:opacity-60"
+                variant="surface"
+                size="sm"
                 onClick={() => onRate("hard")}
                 disabled={isSubmitting}
+                className="font-ui w-full"
               >
                 Hard
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                className="rounded-full border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-200 shadow-sm shadow-slate-900/40 transition hover:bg-slate-800 disabled:opacity-60"
+                variant="surface"
+                size="sm"
                 onClick={() => onRate("good")}
                 disabled={isSubmitting}
+                className="font-ui w-full"
               >
                 Good
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                className="rounded-full border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-200 shadow-sm shadow-slate-900/40 transition hover:bg-slate-800 disabled:opacity-60"
+                variant="primary"
+                size="sm"
                 onClick={() => onRate("easy")}
                 disabled={isSubmitting}
+                className="font-ui w-full"
               >
                 Easy
-              </button>
+              </Button>
             </div>
           </div>
         </div>

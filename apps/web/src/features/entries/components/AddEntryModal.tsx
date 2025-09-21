@@ -1,5 +1,6 @@
 import { type FormEvent } from "react";
 import type { GenerateResponse } from "@/features/entries/types";
+import Button from "@/app/components/Button";
 
 type AddEntryModalProps = {
   isOpen: boolean;
@@ -13,7 +14,6 @@ type AddEntryModalProps = {
   onClose: () => void;
   onEntryChange: (value: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  onAddAnother: () => void;
 };
 
 const AddEntryModal = ({
@@ -28,7 +28,6 @@ const AddEntryModal = ({
   onClose,
   onEntryChange,
   onSubmit,
-  onAddAnother,
 }: AddEntryModalProps) => {
   if (!isOpen) {
     return null;
@@ -36,9 +35,12 @@ const AddEntryModal = ({
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center bg-slate-950/80 px-4 backdrop-blur-sm"
+      className="fixed inset-0 flex items-center justify-center px-4 bg-black/40 backdrop-blur-sm"
       role="presentation"
       onClick={onClose}
+      style={{
+        backgroundColor: "color-mix(in oklch, var(--ink), transparent 35%)",
+      }}
     >
       <div
         className="w-full max-w-xl"
@@ -47,30 +49,33 @@ const AddEntryModal = ({
         aria-labelledby="entry-modal-title"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="[perspective:1600px]">
+        <div className="[perspective:1600px] font-card">
           <div
-            className={`relative min-h-[22rem] w-full transition-transform duration-500 [transform-style:preserve-3d] ${
+            className={`relative h-[75vh] max-h-[85vh] min-h-[28rem] w-full transition-transform duration-500 [transform-style:preserve-3d] ${
               isFlipped ? "[transform:rotateY(180deg)]" : ""
             }`}
           >
-            <div className="absolute inset-0 flex flex-col rounded-2xl border border-slate-700 bg-slate-900 p-6 text-slate-100 shadow-2xl [backface-visibility:hidden]">
-              <h2 id="entry-modal-title" className="text-2xl font-semibold text-sky-200">
+            <div className="absolute inset-0 flex flex-col pixel-border pixel-surface pixel-shadow p-6 text-[var(--text)] rounded-none [backface-visibility:hidden]">
+              <h2
+                id="entry-modal-title"
+                className="text-2xl font-bold text-[var(--primary)] font-ui"
+              >
                 Add a new entry
               </h2>
 
-              <p className="mt-2 text-sm text-slate-400">
+              <p className="mt-2 text-sm opacity-80">
                 Enter an English word, idiom, or collocation to study later.
               </p>
 
               <form className="mt-6 flex flex-1 flex-col" onSubmit={onSubmit}>
-                <label className="block text-sm font-medium text-slate-300">
+                <label className="block text-sm font-medium opacity-90 font-ui">
                   Entry
                   <input
                     type="text"
                     value={entryText}
                     onChange={(event) => onEntryChange(event.target.value)}
                     placeholder="e.g. break the ice"
-                    className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-base text-slate-100 placeholder:text-slate-500 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500/60"
+                    className="mt-2 w-full pixel-border pixel-surface pixel-focus px-4 py-3 text-base text-[var(--text)] font-card placeholder:opacity-60 rounded-none"
                     autoFocus
                     required
                     disabled={isSubmitting}
@@ -78,51 +83,64 @@ const AddEntryModal = ({
                 </label>
 
                 {submissionError ? (
-                  <p className="mt-3 text-sm text-rose-400">{submissionError}</p>
+                  <p className="mt-3 text-sm" style={{ color: "var(--muted)" }}>
+                    {submissionError}
+                  </p>
                 ) : null}
 
                 <div className="mt-auto flex justify-end gap-3 pt-6">
-                  <button
+                  <Button
                     type="button"
-                    className="rounded-full border border-slate-600 px-5 py-2 text-sm font-semibold text-slate-300 transition hover:border-slate-500 hover:text-slate-200"
+                    variant="surface"
+                    size="sm"
                     onClick={onClose}
                     disabled={isSubmitting}
+                    className="font-ui"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
-                    className="rounded-full bg-sky-500 px-6 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-sky-900/30 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-sky-500/60"
+                    variant="primary"
+                    size="sm"
                     disabled={isSubmitting}
+                    className="font-ui"
                   >
                     {isSubmitting ? "Generating..." : "Submit"}
-                  </button>
+                  </Button>
                 </div>
               </form>
             </div>
 
-            <div className="absolute inset-0 flex flex-col rounded-2xl border border-slate-700 bg-slate-900 p-6 text-slate-100 shadow-2xl [backface-visibility:hidden] [transform:rotateY(180deg)]">
-              <h2 className="text-2xl font-semibold text-sky-200">Generated entry</h2>
+            <div className="absolute inset-0 flex flex-col pixel-border pixel-surface pixel-shadow p-6 text-[var(--text)] rounded-none [backface-visibility:hidden] [transform:rotateY(180deg)]">
+              <h2 className="text-2xl font-bold text-[var(--primary)] font-ui">
+                {submittedEntry}
+              </h2>
 
               {alreadyExists ? (
-                <p className="mt-1 text-xs text-amber-300">This entry is already in your list. Showing saved content.</p>
-              ) : null}
-
-              {submittedEntry ? (
-                <p className="mt-2 text-sm text-slate-400">Result for “{submittedEntry}”.</p>
+                <p className="mt-1 text-xs" style={{ color: "var(--muted)" }}>
+                  This entry is already in your list. Showing saved content.
+                </p>
               ) : null}
 
               <div className="mt-6 flex-1 space-y-5 overflow-y-auto pr-1 text-sm">
                 <section>
-                  <h3 className="text-base font-semibold text-slate-200">Meaning</h3>
-                  <p className="mt-2 text-slate-300">{generationResult?.meaning}</p>
+                  <h3 className="text-base font-semibold opacity-90">
+                    Meaning
+                  </h3>
+                  <p className="mt-2 opacity-90">{generationResult?.meaning}</p>
                 </section>
 
                 <section>
-                  <h3 className="text-base font-semibold text-slate-200">Example sentences</h3>
-                  <ul className="mt-2 space-y-2 text-slate-300">
+                  <h3 className="text-base font-semibold opacity-90">
+                    Example sentences
+                  </h3>
+                  <ul className="mt-2 space-y-2">
                     {generationResult?.examples?.map((example, index) => (
-                      <li key={index} className="rounded-lg border border-slate-800 bg-slate-900/80 px-3 py-2">
+                      <li
+                        key={index}
+                        className="pixel-border pixel-surface px-3 py-2 rounded-none"
+                      >
                         {example}
                       </li>
                     ))}
@@ -130,31 +148,32 @@ const AddEntryModal = ({
                 </section>
 
                 <section>
-                  <h3 className="text-base font-semibold text-slate-200">Tone tip</h3>
-                  <p className="mt-2 text-slate-300">{generationResult?.toneTip}</p>
+                  <h3 className="text-base font-semibold opacity-90">
+                    Tone tip
+                  </h3>
+                  <p className="mt-2 opacity-90">{generationResult?.toneTip}</p>
                 </section>
 
                 <section>
-                  <h3 className="text-base font-semibold text-slate-200">Etymology</h3>
-                  <p className="mt-2 text-slate-300">{generationResult?.etymology}</p>
+                  <h3 className="text-base font-semibold opacity-90">
+                    Etymology
+                  </h3>
+                  <p className="mt-2 opacity-90">
+                    {generationResult?.etymology}
+                  </p>
                 </section>
               </div>
 
               <div className="mt-6 flex justify-end gap-3">
-                <button
+                <Button
                   type="button"
-                  className="rounded-full border border-slate-600 px-5 py-2 text-sm font-semibold text-slate-300 transition hover:border-slate-500 hover:text-slate-200"
+                  variant="surface"
+                  size="sm"
                   onClick={onClose}
+                  className="font-ui"
                 >
                   Close
-                </button>
-                <button
-                  type="button"
-                  className="rounded-full bg-sky-500 px-6 py-2 text-sm font-semibold text-slate-900 shadow-lg shadow-sky-900/30 transition hover:bg-sky-400"
-                  onClick={onAddAnother}
-                >
-                  Add another
-                </button>
+                </Button>
               </div>
             </div>
           </div>

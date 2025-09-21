@@ -1,1 +1,126 @@
+/* Web fonts for pixel theme (must come first) */
+@import url("https://fonts.googleapis.com/css2?family=Silkscreen:wght@400&family=Quantico:wght@400;700&display=swap");
 @import "tailwindcss";
+
+/*
+  Pixel Theme Foundations
+  - Palette tokens from provided image
+  - Semantic CSS variables for light/dark
+  - Font variables: UI = Silkscreen, Card = Quantico
+  - Minimal utility scaffolding for later adoption
+*/
+
+:root {
+  /* Base palette (from image) */
+  --px-cream: #fdeec2; /* light background */
+  --px-peach: #f8c19a;
+  --px-rose: #ee9aa5;
+  --px-mauve: #b55c7c; /* primary */
+  --px-plum: #7d3757; /* depth/shadow */
+  --px-ink: #2b1624;  /* text / outlines */
+  --px-paper: #fff7ec; /* card/input surface */
+
+  /* Typography variables */
+  --font-ui: "Silkscreen", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-card: "Quantico", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, "Apple Color Emoji", "Segoe UI Emoji";
+
+  /* Semantic color roles (Light default) */
+  --bg: var(--px-cream);
+  --surface: var(--px-paper);
+  --text: var(--px-ink);
+  --muted: var(--px-rose);
+  --border: var(--px-plum);
+  --primary: var(--px-mauve);
+  --primary-contrast: var(--px-paper);
+  --focus: var(--px-mauve);
+  --shadow-1: var(--px-plum);
+  --shadow-2: color-mix(in oklch, var(--px-plum), black 20%);
+
+  /* Study mode: calmer single-tone surface placeholder */
+  --study-surface: var(--surface);
+}
+
+/* Auto dark via system preference */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: var(--px-ink);
+    --surface: color-mix(in oklch, var(--px-plum), black 25%);
+    --text: var(--px-cream);
+    --muted: var(--px-rose);
+    --border: var(--px-plum);
+    --primary: var(--px-rose);
+    --primary-contrast: var(--px-ink);
+    --focus: var(--px-rose);
+    --shadow-1: color-mix(in oklch, var(--px-plum), black 15%);
+    --shadow-2: color-mix(in oklch, var(--px-plum), black 35%);
+  }
+}
+
+/* Manual override classes (optional future toggle) */
+:root.theme-light {
+  --bg: var(--px-cream);
+  --surface: var(--px-paper);
+  --text: var(--px-ink);
+  --muted: var(--px-rose);
+  --border: var(--px-plum);
+  --primary: var(--px-mauve);
+  --primary-contrast: var(--px-paper);
+  --focus: var(--px-mauve);
+  --shadow-1: var(--px-plum);
+  --shadow-2: color-mix(in oklch, var(--px-plum), black 20%);
+}
+
+:root.theme-dark {
+  --bg: var(--px-ink);
+  --surface: color-mix(in oklch, var(--px-plum), black 25%);
+  --text: var(--px-cream);
+  --muted: var(--px-rose);
+  --border: var(--px-plum);
+  --primary: var(--px-rose);
+  --primary-contrast: var(--px-ink);
+  --focus: var(--px-rose);
+  --shadow-1: color-mix(in oklch, var(--px-plum), black 15%);
+  --shadow-2: color-mix(in oklch, var(--px-plum), black 35%);
+}
+
+/* Calmer single-tone surface for study mode (to be toggled later) */
+:root.study-calm {
+  --study-surface: var(--bg);
+}
+
+/* Base element styles */
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  text-rendering: optimizeLegibility;
+}
+
+/* Make all buttons use a pointer cursor */
+@layer base {
+  button { cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
+}
+
+/* Font helpers for targeted areas */
+.font-ui { font-family: var(--font-ui); }
+.font-card { font-family: var(--font-card); }
+
+/* Minimal pixel utility scaffolding - used in later steps */
+@layer utilities {
+  .pixel-border { border: 2px solid var(--border); }
+  .pixel-surface { background-color: var(--surface); }
+  .pixel-study-surface { background-color: var(--study-surface); }
+  .pixel-bg { background-color: var(--bg); }
+  .pixel-text { color: var(--text); }
+  .pixel-primary { background-color: var(--primary); color: var(--primary-contrast); }
+  .pixel-shadow {
+    box-shadow:
+      0 2px 0 0 var(--shadow-1),
+      0 4px 0 0 var(--shadow-2);
+  }
+  .pixel-focus:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+}
+
+/* TODO: Add optional low-opacity pixel-dither background texture */

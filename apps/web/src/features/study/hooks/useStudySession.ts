@@ -38,12 +38,16 @@ export function useStudySession() {
       setIsActive(next.length > 0);
       setIsRevealed(false);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to submit review."
-      );
+      setError(err instanceof Error ? err.message : "Failed to submit review.");
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const close = () => {
+    setIsActive(false);
+    setIsRevealed(false);
+    setItems([]);
   };
 
   return {
@@ -56,6 +60,6 @@ export function useStudySession() {
     start,
     reveal,
     rate,
+    close,
   } as const;
 }
-

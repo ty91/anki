@@ -34,18 +34,18 @@ const LoginView = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-6 text-slate-100">
-      <div className="flex w-full max-w-md flex-col gap-6 rounded-2xl border border-slate-800 bg-slate-900/70 px-10 py-12 shadow-2xl shadow-slate-900/60">
-        <h1 className="text-3xl font-semibold text-sky-300 text-center">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--bg)] px-4 py-6 text-[var(--text)] font-ui">
+      <div className="flex w-full max-w-md flex-col gap-6 pixel-border pixel-surface pixel-shadow px-10 py-12">
+        <h1 className="text-3xl font-bold text-center text-[var(--primary)]">
           {mode === "sign-in" ? "Sign in" : "Create account"}
         </h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1">
-            <span className="text-sm text-slate-300">User ID</span>
+            <span className="text-sm opacity-80">User ID</span>
             <input
               value={userId}
               onChange={(e) => setUserId(e.target.value)}
-              className="rounded-lg border border-slate-700 bg-slate-950 px-4 py-2 text-slate-100 outline-none focus:border-sky-500"
+              className="pixel-border pixel-surface pixel-focus px-4 py-2 text-[var(--text)] rounded-none"
               placeholder="yourid"
               autoComplete="username"
             />
@@ -53,12 +53,12 @@ const LoginView = () => {
 
           {mode === "sign-up" ? (
             <label className="flex flex-col gap-1">
-              <span className="text-sm text-slate-300">Email (optional)</span>
+              <span className="text-sm opacity-80">Email (optional)</span>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="rounded-lg border border-slate-700 bg-slate-950 px-4 py-2 text-slate-100 outline-none focus:border-sky-500"
+                className="pixel-border pixel-surface pixel-focus px-4 py-2 text-[var(--text)] rounded-none"
                 placeholder="you@example.com"
                 autoComplete="email"
               />
@@ -66,12 +66,12 @@ const LoginView = () => {
           ) : null}
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm text-slate-300">Password</span>
+            <span className="text-sm opacity-80">Password</span>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="rounded-lg border border-slate-700 bg-slate-950 px-4 py-2 text-slate-100 outline-none focus:border-sky-500"
+              className="pixel-border pixel-surface pixel-focus px-4 py-2 text-[var(--text)] rounded-none"
               placeholder="••••••••"
               autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
             />
@@ -79,27 +79,27 @@ const LoginView = () => {
 
           <button
             type="submit"
-            className="mt-2 rounded-full bg-sky-500 px-6 py-3 text-base font-semibold text-slate-950 shadow-lg shadow-sky-900/50 transition hover:bg-sky-400 disabled:opacity-60"
+            className="mt-2 pixel-border pixel-primary pixel-shadow px-6 py-3 text-base font-bold rounded-none transition-colors disabled:opacity-60"
             disabled={isLoading}
           >
             {isLoading ? (mode === "sign-in" ? "Signing in..." : "Creating...") : mode === "sign-in" ? "Sign in" : "Sign up"}
           </button>
         </form>
 
-        <div className="text-center text-sm text-slate-300">
+        <div className="text-center text-sm opacity-80">
           {mode === "sign-in" ? (
-            <button type="button" className="text-sky-300 hover:underline" onClick={() => setMode("sign-up")}>
+            <button type="button" className="text-[var(--primary)] underline-offset-4 hover:underline" onClick={() => setMode("sign-up")}>
               Create a new account
             </button>
           ) : (
-            <button type="button" className="text-sky-300 hover:underline" onClick={() => setMode("sign-in")}>
+            <button type="button" className="text-[var(--primary)] underline-offset-4 hover:underline" onClick={() => setMode("sign-in")}>
               Already have an account? Sign in
             </button>
           )}
         </div>
 
         {error ? (
-          <p className="text-sm text-rose-400 text-center" role="alert">
+          <p className="text-sm text-center" style={{ color: "var(--muted)" }} role="alert">
             {error}
           </p>
         ) : null}

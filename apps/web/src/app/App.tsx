@@ -6,6 +6,7 @@ import StudyCard from "@/features/study/components/StudyCard";
 import { useStudySession } from "@/features/study/hooks/useStudySession";
 import { useEntryCreation } from "@/features/entries/hooks/useEntryCreation";
 import Header from "@/app/components/Header";
+import Button from "@/app/components/Button";
 
 const App = () => {
   const { status, user, signOut } = useAuth();
@@ -22,6 +23,7 @@ const App = () => {
     start: startStudy,
     reveal: revealStudyCard,
     rate: handleRate,
+    close: closeStudy,
   } = useStudySession();
 
   const openModal = () => {
@@ -52,8 +54,8 @@ const App = () => {
 
   if (status === "loading") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-6 text-slate-100">
-        <p className="text-sm text-slate-300">Checking your session...</p>
+      <div className="flex min-h-screen items-center justify-center bg-[var(--bg)] px-4 py-6 text-[var(--text)]">
+        <p className="text-sm/6 opacity-80">Checking your session...</p>
       </div>
     );
   }
@@ -63,26 +65,67 @@ const App = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-950 px-4 py-6 text-slate-100">
-      <Header
-        onSignOut={handleSignOut}
-        isSignOutLoading={isSignOutLoading}
-        signOutError={signOutError}
-        onOpenModal={openModal}
-      />
+    <div className="flex min-h-screen flex-col bg-[var(--bg)] px-4 py-6 text-[var(--text)] font-ui">
+      {/* Top-center logo */}
+      <div className="mx-auto mb-4 text-center select-none">
+        <h1 className="text-4xl md:text-5xl font-bold tracking-wider text-[var(--primary)]">
+          Memorize!
+        </h1>
+      </div>
+
+      <Header />
 
       <main className="flex flex-1 items-center justify-center">
         {!isStudyActive ? (
-          <div className="flex flex-col items-center gap-3">
-            <button
-              type="button"
-              onClick={startStudy}
-              className="rounded-full bg-sky-500 px-12 py-6 text-2xl font-semibold text-slate-900 shadow-xl shadow-sky-900/40 transition hover:bg-sky-400"
+          <div className="flex flex-col items-center gap-3 w-full px-4">
+            <Button
+              aria-label="Add"
+              onClick={openModal}
+              variant="surface"
+              size="lg"
+              className="w-64 max-w-[80vw]"
             >
-              Start
-            </button>
+              Add
+            </Button>
+            <Button
+              onClick={startStudy}
+              variant="primary"
+              size="lg"
+              className="w-64 max-w-[80vw]"
+            >
+              Study
+            </Button>
+            <Button
+              variant="surface"
+              size="lg"
+              className="w-64 max-w-[80vw] text-base"
+            >
+              Expressions
+            </Button>
+            <Button
+              variant="surface"
+              size="sm"
+              onClick={handleSignOut}
+              className="mt-2"
+              disabled={isSignOutLoading}
+            >
+              {isSignOutLoading ? "Signing out..." : "Sign out"}
+            </Button>
+            {signOutError ? (
+              <p
+                className="text-xs"
+                style={{ color: "var(--muted)" }}
+                role="alert"
+              >
+                {signOutError}
+              </p>
+            ) : null}
             {studyError ? (
-              <p className="text-sm text-rose-400" role="alert">
+              <p
+                className="text-sm"
+                style={{ color: "var(--muted)" }}
+                role="alert"
+              >
                 {studyError}
               </p>
             ) : null}
@@ -97,13 +140,27 @@ const App = () => {
               onRate={handleRate}
             />
             {studyError ? (
-              <p className="text-sm text-rose-400" role="alert">
+              <p
+                className="text-sm"
+                style={{ color: "var(--muted)" }}
+                role="alert"
+              >
                 {studyError}
               </p>
             ) : null}
           </div>
         ) : (
-          <div className="text-slate-300">No more due cards right now.</div>
+          <div className="w-full flex flex-col items-center gap-4">
+            <div className="opacity-80">No more due cards right now.</div>
+            <Button
+              variant="surface"
+              size="lg"
+              onClick={closeStudy}
+              className="w-64 max-w-[80vw]"
+            >
+              Done
+            </Button>
+          </div>
         )}
       </main>
 
@@ -118,7 +175,6 @@ const App = () => {
         onClose={closeModal}
         onEntryChange={entry.onEntryChange}
         onSubmit={entry.onSubmit}
-        onAddAnother={entry.onAddAnother}
         alreadyExists={entry.alreadyExists}
       />
     </div>
